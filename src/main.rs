@@ -68,7 +68,6 @@ fn timsort(list: &mut [i32], n: usize) {
         i = j;
     }
     while runs.len() > 1 {
-        dbg!(&runs);
         let (b, c) = (runs.len() - 2, runs.len() - 1);
         merge(list, runs[b], runs[c]);
         runs[c] = (runs[b].0, runs[b].1 + runs[c].1);
@@ -86,21 +85,43 @@ fn compute_minrun(mut n: usize) -> usize {
 }
 
 fn merge(list: &mut [i32], a: (usize, usize), b: (usize, usize)) {
-    let mut temp = vec![0; a.1];
-    temp.copy_from_slice(&list[a.0..a.0 + a.1]);
-    let (mut list_pos, mut temp_pos, mut b_pos) = (a.0, 0, b.0);
-    while list_pos < b_pos {
-        if temp[temp_pos] <= list[b_pos] {
-            list[list_pos] = temp[temp_pos];
-            temp_pos += 1;
-        } else {
-            list[list_pos] = list[b_pos];
-            b_pos += 1;
-            if b_pos == b.0 + b.1 {
-                list[list_pos..b_pos].copy_from_slice(&temp[temp_pos..]);
-                break;
+    if a.1 <= b.1 {
+        let mut temp = vec![0; a.1];
+        temp.copy_from_slice(&list[a.0..a.0 + a.1]);
+        let (mut list_pos, mut temp_pos, mut b_pos) = (a.0, 0, b.0);
+        while list_pos < b_pos {
+            if temp[temp_pos] <= list[b_pos] {
+                list[list_pos] = temp[temp_pos];
+                temp_pos += 1;
+            } else {
+                list[list_pos] = list[b_pos];
+                b_pos += 1;
+                if b_pos == b.0 + b.1 {
+                    list[list_pos + 1..b_pos].copy_from_slice(&temp[temp_pos..]);
+                    break;
+                }
             }
+            list_pos += 1;
         }
-        list_pos += 1;
+    } else {
+        let mut temp = vec![0; b.1];
+        temp.copy_from_slice(&list[b.0..b.0 + b.1]);
+        let (mut list_pos, mut temp_pos, mut a_pos) = (b.0 + b.1 - 1, b.1 - 1, a.0 + a.1 - 1);
+        while list_pos > a_pos {
+            if temp[temp_pos] >= list[a_pos] {
+                list[list_pos] = temp[temp_pos];
+                if temp_pos > 0 {
+                    temp_pos -= 1;
+                }
+            } else {
+                list[list_pos] = list[a_pos];
+                a_pos -= 1;
+                if a_pos + 1 == a.0 {
+                    list[a_pos + 1..list_pos].copy_from_slice(&temp[..=temp_pos]);
+                    break;
+                }
+            }
+            list_pos -= 1;
+        }
     }
 }
